@@ -94,7 +94,7 @@ Next.js 14 (App Router) · React 18 · TypeScript · Zustand · Tailwind CSS · 
 - [x] Agent pipeline (tools, validation, application)
 - [x] Image generation pipeline
 - [x] Export / import
-- [ ] Agent transparency: show raw tool calls in chat
+- [x] Agent transparency: show raw tool calls in chat
 - [ ] Multi-turn context for follow-up requests
 - [ ] Named print areas (left-chest, back-full, …) as first-class placement targets
 - [ ] Undo/redo across manual + AI edits

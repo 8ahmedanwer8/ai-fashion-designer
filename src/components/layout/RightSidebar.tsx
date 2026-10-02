@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAgentStore, type ChatMessage } from "@/lib/store/agentStore";
+import type { DesignAction } from "@/lib/agent/actions";
 import { getAgentProviderId } from "@/lib/agent/runtime";
 import { cn } from "@/lib/utils";
 
@@ -154,6 +155,33 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         {message.text}
       </div>
 
+      {/* Raw tool calls the model emitted (agent transparency) */}
+      {!isUser && message.toolCalls && message.toolCalls.length > 0 && (
+        <details className="group max-w-[90%] rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2">
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 font-mono text-[9px] font-bold uppercase tracking-wide text-emerald-400 [&::-webkit-details-marker]:hidden">
+            <span className="transition-transform group-open:rotate-90">›</span>
+            tool calls ({message.toolCalls.length})
+          </summary>
+          <div className="mt-2 flex flex-col gap-1.5">
+            {message.toolCalls.map((action, i) => (
+              <div key={i} className="font-mono text-[10px] leading-relaxed">
+                <span className="text-emerald-400">» </span>
+                <span className="font-bold text-foreground/90">{action.type}</span>
+                {action.type === "generateGraphic" && (
+                  <span className="ml-1 rounded bg-emerald-500/15 px-1 py-px text-[8px] uppercase text-emerald-300/80">
+                    async
+                  </span>
+                )}
+                <span className="text-muted-foreground">
+                  {" "}
+                  {formatActionParams(action)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+
       {/* Image generation in progress */}
       {message.generating && (
         <div className="flex max-w-[90%] items-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/5 px-3 py-2">
@@ -205,6 +233,20 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       )}
     </div>
   );
+}
+
+/** Compact one-line rendering of a tool call's params, e.g. { color: "black" }. */
+function formatActionParams(action: DesignAction): string {
+  const params = Object.entries(action).filter(([key]) => key !== "type");
+  if (params.length === 0) return "{}";
+  const parts = params.map(([key, value]) => {
+    let display =
+      typeof value === "string" ? `"${value}"` : JSON.stringify(value);
+    if (display === undefined) display = String(value);
+    if (display.length > 60) display = display.slice(0, 57) + "…";
+    return `${key}: ${display}`;
+  });
+  return `{ ${parts.join(", ")} }`;
 }
 
 function ThinkingBubble() {

@@ -2,11 +2,14 @@ import { create } from "zustand";
 
 import { useDesignStore } from "@/lib/store/designStore";
 import { runAgentTurn, runGeneration } from "@/lib/agent/runtime";
+import type { DesignAction } from "@/lib/agent/actions";
 
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   text: string;
+  /** The validated tool calls the model emitted this turn (assistant only). */
+  toolCalls?: DesignAction[];
   /** Per-turn summary of actions the assistant applied (assistant only). */
   appliedSummaries?: string[];
   /** Validation problems for that turn, if any. */
@@ -58,6 +61,7 @@ export const useAgentStore = create<AgentStore>((set, get) => ({
       id: assistantId,
       role: "assistant",
       text: result.reply,
+      toolCalls: result.actions,
       appliedSummaries: result.appliedSummaries,
       errors: result.validationErrors.length
         ? result.validationErrors

@@ -24,6 +24,8 @@ export interface AgentTurnResult {
   appliedSummaries: string[];
   validationErrors: string[];
   rawActionCount: number;
+  /** The validated tool calls the model emitted this turn (for UI display). */
+  actions: DesignAction[];
   /** Generation requests deferred to the async image pipeline. */
   pendingGenerations: GenerateGraphicAction[];
 }
@@ -69,6 +71,7 @@ export async function runAgentTurn(
       appliedSummaries: [],
       validationErrors: [(err as Error).message],
       rawActionCount: 0,
+      actions: [],
       pendingGenerations: [],
     };
   }
@@ -95,6 +98,7 @@ export async function runAgentTurn(
     appliedSummaries,
     validationErrors: errors,
     rawActionCount: Array.isArray(rawActions) ? rawActions.length : 0,
+    actions: valid,
     pendingGenerations,
   };
 }
