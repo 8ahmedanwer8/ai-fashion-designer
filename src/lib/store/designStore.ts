@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { temporal } from "zundo";
 
 import type {
   DesignElement,
@@ -78,110 +79,136 @@ function topZIndex(elements: DesignElement[]): number {
   return elements.reduce((max, el) => Math.max(max, el.zIndex), 0);
 }
 
-export const useDesignStore = create<DesignStore>((set, get) => ({
-  design: initialDesign,
-  selectedElementId: null,
+/**
+ * The design store, wrapped in zundo's temporal middleware for undo/redo.
+ *
+ * ONLY the `design` document is history-tracked (selection is UI state and
+ * excluded via partialize). Because manual edits AND the AI agent's actions
+ * both mutate the store through the same methods, ONE undo system covers
+ * both — Ctrl+Z reverts an agent turn exactly like a manual drag.
+ *
+ * Undo/redo are invoked via `useDesignStore.temporal.getState().undo/redo()`.
+ */
+export const useDesignStore = create<DesignStore>()(
+  temporal(
+    (set, get) => ({
+      design: initialDesign,
+      selectedElementId: null,
 
-  setGarment: (garment) =>
-    set((s) => ({ design: { ...s.design, garment } })),
+      setGarment: (garment) =>
+        set((s) => ({ design: { ...s.design, garment } })),
 
-  setView: (view) =>
-    set((s) => ({ design: { ...s.design, view }, selectedElementId: null })),
+      setView: (view) =>
+        set((s) => ({ design: { ...s.design, view }, selectedElementId: null })),
 
-  setGarmentColor: (garmentColor) =>
-    set((s) => ({ design: { ...s.design, garmentColor } })),
+      setGarmentColor: (garmentColor) =>
+        set((s) => ({ design: { ...s.design, garmentColor } })),
 
-  selectElement: (id) => set({ selectedElementId: id }),
+      selectElement: (id) => set({ selectedElementId: id }),
 
-  addText: (partial) => {
-    const id = nextId("element");
-    const { design } = get();
-    const newEl: TextElement = {
-      id,
-      type: "text",
-      view: design.view,
-      text: "NEW TEXT",
-      x: CANVAS_WIDTH / 2 - 90,
-      y: CANVAS_HEIGHT / 2 - 25,
-      width: 180,
-      height: 50,
-      zIndex: topZIndex(design.elements) + 1,
-      fontSize: 32,
-      color: "#ffffff",
-      fontWeight: 700,
-      letterSpacing: 0.02,
-      textAlign: "center",
-      ...partial,
-    };
-    set((s) => ({
-      design: { ...s.design, elements: [...s.design.elements, newEl] },
-      selectedElementId: id,
-    }));
-    return id;
-  },
-
-  addImage: (src, name = "Uploaded image", partial) => {
-    const id = nextId("element");
-    const { design } = get();
-    const newEl: ImageElement = {
-      id,
-      type: "image",
-      view: design.view,
-      src,
-      name,
-      x: CANVAS_WIDTH / 2 - 100,
-      y: CANVAS_HEIGHT / 2 - 100,
-      width: 200,
-      height: 200,
-      zIndex: topZIndex(design.elements) + 1,
-      ...partial,
-    };
-    set((s) => ({
-      design: { ...s.design, elements: [...s.design.elements, newEl] },
-      selectedElementId: id,
-    }));
-    return id;
-  },
-
-  updateElement: (id, patch) =>
-    set((s) => ({
-      design: {
-        ...s.design,
-        elements: s.design.elements.map((el) =>
-          el.id === id ? ({ ...el, ...patch } as DesignElement) : el,
-        ),
+      addText: (partial) => {
+        const id = nextId("element");
+        const { design } = get();
+        const newEl: TextElement = {
+          id,
+          type: "text",
+          view: design.view,
+          text: "NEW TEXT",
+          x: CANVAS_WIDTH / 2 - 90,
+          y: CANVAS_HEIGHT / 2 - 25,
+          width: 180,
+          height: 50,
+          zIndex: topZIndex(design.elements) + 1,
+          fontSize: 32,
+          color: "#ffffff",
+          fontWeight: 700,
+          letterSpacing: 0.02,
+          textAlign: "center",
+          ...partial,
+        };
+        set((s) => ({
+          design: { ...s.design, elements: [...s.design.elements, newEl] },
+          selectedElementId: id,
+        }));
+        return id;
       },
-    })),
 
-  moveElement: (id, x, y) =>
-    set((s) => ({
-      design: {
-        ...s.design,
-        elements: s.design.elements.map((el) =>
-          el.id === id ? { ...el, x, y } : el,
-        ),
+      addImage: (src, name = "Uploaded image", partial) => {
+        const id = nextId("element");
+        const { design } = get();
+        const newEl: ImageElement = {
+          id,
+          type: "image",
+          view: design.view,
+          src,
+          name,
+          x: CANVAS_WIDTH / 2 - 100,
+          y: CANVAS_HEIGHT / 2 - 100,
+          width: 200,
+          height: 200,
+          zIndex: topZIndex(design.elements) + 1,
+          ...partial,
+        };
+        set((s) => ({
+          design: { ...s.design, elements: [...s.design.elements, newEl] },
+          selectedElementId: id,
+        }));
+        return id;
       },
-    })),
 
-  resizeElement: (id, width, height) =>
-    set((s) => ({
-      design: {
-        ...s.design,
-        elements: s.design.elements.map((el) =>
-          el.id === id ? { ...el, width, height } : el,
-        ),
+      updateElement: (id, patch) =>
+        set((s) => ({
+          design: {
+            ...s.design,
+            elements: s.design.elements.map((el) =>
+              el.id === id ? ({ ...el, ...patch } as DesignElement) : el,
+            ),
+          },
+        })),
+
+      moveElement: (id, x, y) =>
+        set((s) => ({
+          design: {
+            ...s.design,
+            elements: s.design.elements.map((el) =>
+              el.id === id ? { ...el, x, y } : el,
+            ),
+          },
+        })),
+
+      resizeElement: (id, width, height) =>
+        set((s) => ({
+          design: {
+            ...s.design,
+            elements: s.design.elements.map((el) =>
+              el.id === id ? { ...el, width, height } : el,
+            ),
+          },
+        })),
+
+      deleteElement: (id) =>
+        set((s) => ({
+          design: {
+            ...s.design,
+            elements: s.design.elements.filter((el) => el.id !== id),
+          },
+          selectedElementId:
+            s.selectedElementId === id ? null : s.selectedElementId,
+        })),
+
+      loadDesign: (design) => {
+        set({ design, selectedElementId: null });
+        // Importing a document starts a fresh history — undoing across
+        // documents would be confusing.
+        useDesignStore.temporal.getState().clear();
       },
-    })),
-
-  deleteElement: (id) =>
-    set((s) => ({
-      design: {
-        ...s.design,
-        elements: s.design.elements.filter((el) => el.id !== id),
-      },
-      selectedElementId:
-        s.selectedElementId === id ? null : s.selectedElementId,
-    })),
-
-  loadDesign: (design) => set({ design, selectedElementId: null }),
-}));
+    }),
+    {
+      // Only the design document is tracked; selection is ephemeral UI state.
+      partialize: (state) => ({ design: state.design }),
+      // A history entry exists only when the design reference changed.
+      equality: (past, current) => past.design === current.design,
+      limit: 50,
+    },
+  ),
+);

@@ -10,7 +10,7 @@ import {
 import { GarmentMockup } from "./GarmentMockup";
 import { CanvasElement } from "./CanvasElement";
 import { PrintAreaOverlay } from "./PrintAreaOverlay";
-import { cn } from "@/lib/utils";
+import { cn, isTypingTarget } from "@/lib/utils";
 
 /**
  * The center stage. Renders the garment for the active view plus every element
@@ -47,16 +47,29 @@ export function DesignCanvas() {
     return () => window.removeEventListener("resize", recomputeScale);
   }, [recomputeScale]);
 
-  // Keyboard delete for the selected element.
+  // Global shortcuts: delete the selection, undo/redo the design history.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (
-        (e.key === "Delete" || e.key === "Backspace") &&
-        selectedElementId &&
-        !isTypingTarget(e.target)
-      ) {
+      if (isTypingTarget(e.target)) return;
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selectedElementId) {
+          e.preventDefault();
+          deleteElement(selectedElementId);
+        }
+        return;
+      }
+
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      const key = e.key.toLowerCase();
+      const temporal = useDesignStore.temporal.getState();
+      if (key === "z" && !e.shiftKey) {
         e.preventDefault();
-        deleteElement(selectedElementId);
+        temporal.undo();
+      } else if ((key === "z" && e.shiftKey) || key === "y") {
+        e.preventDefault();
+        temporal.redo();
       }
     }
     window.addEventListener("keydown", onKey);
@@ -136,10 +149,4 @@ export function DesignCanvas() {
       </div>
     </div>
   );
-}
-
-function isTypingTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  const tag = target.tagName.toLowerCase();
-  return tag === "input" || tag === "textarea" || target.isContentEditable;
 }
