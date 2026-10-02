@@ -1,6 +1,7 @@
 import type { DesignState } from "@/lib/types";
-import type { AgentProvider } from "./types";
+import type { AgentProvider, ChatTurn } from "./types";
 import type { AgentResponse } from "../actions";
+import { formatActionParams } from "../actions";
 
 /**
  * Calls the server-side /api/agent route, which talks to a real LLM. The route
@@ -14,11 +15,16 @@ export class RemoteProvider implements AgentProvider {
   async generateActions(
     userMessage: string,
     design: DesignState,
+    history?: ChatTurn[],
   ): Promise<AgentResponse> {
     const res = await fetch("/api/agent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: userMessage, design }),
+      body: JSON.stringify({
+        message: userMessage,
+        design,
+        history: (history ?? []).map(serializeTurn),
+      }),
     });
 
     if (!res.ok) {
@@ -34,4 +40,23 @@ export class RemoteProvider implements AgentProvider {
       actions: Array.isArray(data.actions) ? data.actions : [],
     };
   }
+}
+
+/**
+ * Flatten a structured turn into a plain chat message. Tool calls become a
+ * compact bracketed line so the LLM knows what it previously did — enough to
+ * resolve "make it bigger" without bloating the prompt.
+ */
+function serializeTurn(turn: ChatTurn): {
+  role: "user" | "assistant";
+  content: string;
+} {
+  let content = turn.text;
+  if (turn.toolCalls?.length) {
+    const calls = turn.toolCalls
+      .map((a) => `${a.type}${formatActionParams(a)}`)
+      .join("; ");
+    content += `\n[tool calls: ${calls}]`;
+  }
+  return { role: turn.role, content };
 }

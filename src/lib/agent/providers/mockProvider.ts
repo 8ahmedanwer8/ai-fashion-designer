@@ -1,6 +1,6 @@
 import type { DesignState } from "@/lib/types";
-import type { AgentProvider } from "./types";
-import type { AgentResponse, DesignAction } from "../actions";
+import type { AgentProvider, ChatTurn } from "./types";
+import type { AgentResponse, DesignAction, ElementSelector } from "../actions";
 import {
   detectGenerationView,
   isGenerationRequest,
@@ -20,12 +20,15 @@ export class MockProvider implements AgentProvider {
   async generateActions(
     userMessage: string,
     design: DesignState,
+    history?: ChatTurn[],
   ): Promise<AgentResponse> {
     // Tiny delay so the UI's "thinking" state is visible.
     await delay(350);
 
     const msg = userMessage.toLowerCase();
     const actions: DesignAction[] = [];
+    // What unqualified references ("make it bigger") point at, from history.
+    const implicitTarget = resolveImplicitTarget(msg, history);
 
     // --- Image generation (explicit "generate artwork" intent) ---
     // This is the ONLY branch that triggers async image generation. When it
@@ -108,11 +111,11 @@ export class MockProvider implements AgentProvider {
     }
 
     // --- Move logo/text higher/lower/left/right ---
-    const moveIntent = detectMove(msg);
+    const moveIntent = detectMove(msg, implicitTarget);
     if (moveIntent) actions.push(moveIntent);
 
     // --- Bigger / smaller ---
-    const resizeIntent = detectResize(msg);
+    const resizeIntent = detectResize(msg, implicitTarget);
     if (resizeIntent) actions.push(resizeIntent);
 
     // --- Delete ---
@@ -136,6 +139,25 @@ export class MockProvider implements AgentProvider {
 }
 
 // --- intent detectors ---
+
+/**
+ * Resolve what an unqualified reference ("it", "the text") points at. Uses
+ * conversation history: if the previous assistant turn placed or generated a
+ * graphic, "make it bigger" means that image — otherwise the latest text.
+ */
+function resolveImplicitTarget(
+  msg: string,
+  history?: ChatTurn[],
+): ElementSelector {
+  if (/logo|graphic|image/.test(msg)) return "logo";
+  const lastAssistant = [...(history ?? [])]
+    .reverse()
+    .find((t) => t.role === "assistant");
+  const placedGraphic = lastAssistant?.toolCalls?.some(
+    (a) => a.type === "generateGraphic" || a.type === "addPlaceholderGraphic",
+  );
+  return placedGraphic ? "lastImage" : "lastText";
+}
 
 const COLOR_WORDS = [
   "black",
@@ -229,9 +251,8 @@ function detectAddText(msg: string, original: string): DesignAction | null {
   };
 }
 
-function detectMove(msg: string): DesignAction | null {
+function detectMove(msg: string, target: ElementSelector): DesignAction | null {
   if (!/\bmove\b|\bnudge\b|\bshift\b|\bhigher\b|\blower\b/.test(msg)) return null;
-  const target = /logo|graphic|image/.test(msg) ? "logo" : "lastText";
   const step = 60;
   let dx = 0;
   let dy = 0;
@@ -243,8 +264,7 @@ function detectMove(msg: string): DesignAction | null {
   return { type: "moveElement", target, dx, dy };
 }
 
-function detectResize(msg: string): DesignAction | null {
-  const target = /logo|graphic|image/.test(msg) ? "logo" : "lastText";
+function detectResize(msg: string, target: ElementSelector): DesignAction | null {
   if (/\bbigger|larger|increase|grow\b/.test(msg))
     return { type: "resizeElement", target, scale: 1.4 };
   if (/\bsmaller|tinier|reduce|shrink\b/.test(msg))

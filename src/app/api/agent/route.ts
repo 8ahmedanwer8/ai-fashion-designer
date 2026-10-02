@@ -25,7 +25,11 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { message?: string; design?: DesignState };
+  let body: {
+    message?: string;
+    design?: DesignState;
+    history?: unknown;
+  };
   try {
     body = await req.json();
   } catch {
@@ -56,6 +60,10 @@ export async function POST(req: Request) {
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: buildSystemPrompt() },
+          // Recent conversation, so follow-ups like "make it bigger" resolve.
+          ...sanitizeHistory(body.history),
+          // The CURRENT design snapshot always comes last (it reflects all
+          // prior actions) followed by the new user message.
           { role: "user", content: describeDesign(design) },
           { role: "user", content: message },
         ],
@@ -90,4 +98,21 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
+}
+
+/**
+ * Client-supplied history is untrusted input: keep only well-formed user /
+ * assistant turns, cap the count (token cost) and per-turn length (abuse).
+ */
+function sanitizeHistory(raw: unknown): { role: string; content: string }[] {
+  if (!Array.isArray(raw)) return [];
+  const turns: { role: string; content: string }[] = [];
+  for (const item of raw) {
+    if (typeof item !== "object" || item === null) continue;
+    const { role, content } = item as { role?: unknown; content?: unknown };
+    if (typeof role !== "string" || typeof content !== "string") continue;
+    if (role !== "user" && role !== "assistant") continue;
+    turns.push({ role, content: content.slice(0, 2000) });
+  }
+  return turns.slice(-12);
 }

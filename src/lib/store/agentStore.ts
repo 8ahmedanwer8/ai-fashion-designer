@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { useDesignStore } from "@/lib/store/designStore";
 import { runAgentTurn, runGeneration } from "@/lib/agent/runtime";
 import type { DesignAction } from "@/lib/agent/actions";
+import type { ChatTurn } from "@/lib/agent/providers/types";
 
 export interface ChatMessage {
   id: string;
@@ -51,9 +52,11 @@ export const useAgentStore = create<AgentStore>((set, get) => ({
     const userMsg: ChatMessage = { id: newId(), role: "user", text: trimmed };
     set((s) => ({ messages: [...s.messages, userMsg], isThinking: true }));
 
-    // Pass the CURRENT design snapshot as context.
+    // Pass the CURRENT design snapshot plus recent conversation as context,
+    // so follow-ups ("make it bigger") resolve without repeating oneself.
     const design = useDesignStore.getState().design;
-    const result = await runAgentTurn(trimmed, design);
+    const history = buildHistory(get().messages);
+    const result = await runAgentTurn(trimmed, design, history);
 
     const hasGeneration = result.pendingGenerations.length > 0;
     const assistantId = newId();
@@ -110,3 +113,19 @@ export const useAgentStore = create<AgentStore>((set, get) => ({
 
   reset: () => set({ messages: [greeting], isThinking: false, isGenerating: false }),
 }));
+
+/**
+ * Convert chat messages into provider-ready context turns. The hardcoded
+ * greeting is UI chrome, not a real model turn, so it's excluded. The last few
+ * turns are enough to resolve references while keeping prompts cheap.
+ */
+function buildHistory(messages: ChatMessage[]): ChatTurn[] {
+  return messages
+    .filter((m) => m.id !== "msg_greeting")
+    .slice(-10)
+    .map((m) => ({
+      role: m.role,
+      text: m.text,
+      ...(m.toolCalls?.length ? { toolCalls: m.toolCalls } : {}),
+    }));
+}

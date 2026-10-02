@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAgentStore, type ChatMessage } from "@/lib/store/agentStore";
-import type { DesignAction } from "@/lib/agent/actions";
+import { formatActionParams } from "@/lib/agent/actions";
 import { getAgentProviderId } from "@/lib/agent/runtime";
 import { cn } from "@/lib/utils";
 
@@ -233,20 +233,6 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       )}
     </div>
   );
-}
-
-/** Compact one-line rendering of a tool call's params, e.g. { color: "black" }. */
-function formatActionParams(action: DesignAction): string {
-  const params = Object.entries(action).filter(([key]) => key !== "type");
-  if (params.length === 0) return "{}";
-  const parts = params.map(([key, value]) => {
-    let display =
-      typeof value === "string" ? `"${value}"` : JSON.stringify(value);
-    if (display === undefined) display = String(value);
-    if (display.length > 60) display = display.slice(0, 57) + "…";
-    return `${key}: ${display}`;
-  });
-  return `{ ${parts.join(", ")} }`;
 }
 
 function ThinkingBubble() {

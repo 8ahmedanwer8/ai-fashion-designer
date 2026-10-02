@@ -37,6 +37,11 @@ existing elements use the cheap actions instead — never regenerate.
 
 Canvas is 600 wide x 700 tall. (0,0) is top-left. Left chest ~ x:150,y:250.
 Use color NAMES when the user names a color. Keep actions minimal and only what was asked.
+
+You receive the recent conversation (including the tool calls you previously made) plus the
+CURRENT design snapshot. When the user gives a follow-up like "make it bigger" or "move it
+higher", resolve "it" from your last tool calls and the design snapshot instead of asking
+them to clarify.
 If the request is unrelated to design, return an empty actions array and a helpful reply.`;
 }
 

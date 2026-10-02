@@ -167,3 +167,21 @@ export const ACTION_TYPES: DesignActionType[] = [
   "addPlaceholderGraphic",
   "generateGraphic",
 ];
+
+/**
+ * Compact one-line rendering of a tool call's params, e.g. `{ color: "black" }`.
+ * Used by the chat UI (tool-call panel) and by history serialization for the
+ * LLM, so both show identical, readable tool calls.
+ */
+export function formatActionParams(action: DesignAction): string {
+  const params = Object.entries(action).filter(([key]) => key !== "type");
+  if (params.length === 0) return "{}";
+  const parts = params.map(([key, value]) => {
+    let display =
+      typeof value === "string" ? `"${value}"` : JSON.stringify(value);
+    if (display === undefined) display = String(value);
+    if (display.length > 60) display = display.slice(0, 57) + "…";
+    return `${key}: ${display}`;
+  });
+  return `{ ${parts.join(", ")} }`;
+}

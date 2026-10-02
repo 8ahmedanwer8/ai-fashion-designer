@@ -1,5 +1,5 @@
 import type { DesignState } from "@/lib/types";
-import type { AgentProvider } from "./providers/types";
+import type { AgentProvider, ChatTurn } from "./providers/types";
 import { MockProvider } from "./providers/mockProvider";
 import { RemoteProvider } from "./providers/remoteProvider";
 import { validateActions } from "./validateActions";
@@ -53,16 +53,23 @@ export function getAgentProviderId(): string {
  * Run one user turn. Validates actions, applies the cheap (synchronous) ones
  * immediately, and returns any image-generation requests for the caller to run
  * through `runGeneration` (so the UI can show a loading state meanwhile).
+ * Recent conversation turns are forwarded so the provider can resolve
+ * follow-up references ("make it bigger").
  */
 export async function runAgentTurn(
   userMessage: string,
   design: DesignState,
+  history?: ChatTurn[],
 ): Promise<AgentTurnResult> {
   let reply: string;
   let rawActions: unknown;
 
   try {
-    const response = await getProvider().generateActions(userMessage, design);
+    const response = await getProvider().generateActions(
+      userMessage,
+      design,
+      history,
+    );
     reply = response.reply;
     rawActions = response.actions;
   } catch (err) {
