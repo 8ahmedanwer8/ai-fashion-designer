@@ -1,8 +1,12 @@
 import type {
+  AddPlaceholderGraphicAction,
+  AddTextAction,
   DesignAction,
   ElementSelector,
+  GenerateGraphicAction,
   LayoutPreset,
 } from "./actions";
+import { PRINT_AREA_IDS, type PrintAreaId } from "./printAreas";
 
 /**
  * Validates raw, untrusted action data (e.g. parsed from an LLM response)
@@ -91,7 +95,8 @@ function validateOne(item: unknown, index: number): OneResult {
     case "addText": {
       if (typeof a.text !== "string" || a.text.trim() === "")
         return fail(index, "addText needs non-empty text.");
-      const action: DesignAction = { type, text: a.text };
+      const action: AddTextAction = { type, text: a.text };
+      if (isArea(a.area)) action.area = a.area;
       if (isView(a.view)) action.view = a.view as "front" | "back";
       if (isNum(a.x)) action.x = a.x as number;
       if (isNum(a.y)) action.y = a.y as number;
@@ -160,8 +165,9 @@ function validateOne(item: unknown, index: number): OneResult {
       return ok({ type, layout: a.layout as LayoutPreset });
 
     case "addPlaceholderGraphic": {
-      const action: DesignAction = { type };
+      const action: AddPlaceholderGraphicAction = { type };
       if (typeof a.label === "string") action.label = a.label;
+      if (isArea(a.area)) action.area = a.area;
       if (isView(a.view)) action.view = a.view as "front" | "back";
       if (isNum(a.x)) action.x = a.x as number;
       if (isNum(a.y)) action.y = a.y as number;
@@ -173,7 +179,8 @@ function validateOne(item: unknown, index: number): OneResult {
     case "generateGraphic": {
       if (typeof a.prompt !== "string" || a.prompt.trim() === "")
         return fail(index, "generateGraphic needs a non-empty prompt.");
-      const action: DesignAction = { type, prompt: a.prompt };
+      const action: GenerateGraphicAction = { type, prompt: a.prompt };
+      if (isArea(a.area)) action.area = a.area;
       if (isView(a.view)) action.view = a.view as "front" | "back";
       if (isNum(a.x)) action.x = a.x as number;
       if (isNum(a.y)) action.y = a.y as number;
@@ -213,6 +220,9 @@ function isColor(v: unknown): boolean {
 function isSelector(v: unknown): v is ElementSelector {
   if (typeof v !== "string" || v.trim() === "") return false;
   return SELECTOR_KEYWORDS.has(v) || true; // any non-empty string is a candidate id
+}
+function isArea(v: unknown): v is PrintAreaId {
+  return typeof v === "string" && PRINT_AREA_IDS.has(v);
 }
 function clamp(v: number, min: number, max: number): number {
   return Math.min(Math.max(v, min), max);

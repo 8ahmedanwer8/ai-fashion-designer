@@ -1,4 +1,7 @@
-import type { DesignElement, DesignState } from "@/lib/types";
+import type {
+  DesignElement,
+  DesignState,
+} from "@/lib/types";
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
@@ -11,6 +14,11 @@ import type {
 } from "./actions";
 import { resolveColor } from "./colors";
 import { makePlaceholderGraphic } from "./placeholderGraphic";
+import {
+  findArea,
+  graphicAreaPlacement,
+  textAreaPlacement,
+} from "./printAreas";
 
 /**
  * THE single design-mutation handler for the AI agent.
@@ -52,14 +60,27 @@ function applyOne(action: DesignAction): string | null {
       return `Switched to ${action.view} view`;
 
     case "addText": {
-      const view = action.view ?? design.view;
+      // Named area wins for placement (and implies the view); raw x/y remains
+      // the fallback for fine positioning.
+      const area = action.area
+        ? findArea(action.area, design.garment)
+        : null;
+      const view = area ? area.view : (action.view ?? design.view);
       // If targeting a non-active view, switch so the user sees the result.
       if (view !== design.view) store.setView(view);
+      const placement = area
+        ? textAreaPlacement(area, action.fontSize ?? 32)
+        : {
+            x: action.x !== undefined ? clampX(action.x) : undefined,
+            y: action.y !== undefined ? clampY(action.y) : undefined,
+            width: undefined as number | undefined,
+          };
       store.addText({
         text: action.text.toUpperCase(),
         view,
-        ...(action.x !== undefined ? { x: clampX(action.x) } : {}),
-        ...(action.y !== undefined ? { y: clampY(action.y) } : {}),
+        ...(placement.x !== undefined ? { x: placement.x } : {}),
+        ...(placement.y !== undefined ? { y: placement.y } : {}),
+        ...(placement.width !== undefined ? { width: placement.width } : {}),
         ...(action.fontSize !== undefined ? { fontSize: action.fontSize } : {}),
         ...(action.color ? { color: resolveColor(action.color) } : {}),
         ...(action.fontWeight !== undefined
@@ -68,9 +89,13 @@ function applyOne(action: DesignAction): string | null {
         ...(action.letterSpacing !== undefined
           ? { letterSpacing: action.letterSpacing }
           : {}),
-        ...(action.textAlign ? { textAlign: action.textAlign } : {}),
+        ...(action.textAlign
+          ? { textAlign: action.textAlign }
+          : area
+            ? { textAlign: "center" as const }
+            : {}),
       });
-      return `Added text "${action.text}"`;
+      return `Added text "${action.text}"${area ? ` in ${area.id}` : ""}`;
     }
 
     case "recolorElement": {
@@ -128,19 +153,34 @@ function applyOne(action: DesignAction): string | null {
       return applyLayout(action.layout);
 
     case "addPlaceholderGraphic": {
-      const view = action.view ?? design.view;
+      const area = action.area
+        ? findArea(action.area, design.garment)
+        : null;
+      const view = area ? area.view : (action.view ?? design.view);
       if (view !== design.view) store.setView(view);
-      const size = action.size ?? 160;
       const label = action.label ?? "GRAPHIC";
       const src = makePlaceholderGraphic(label, action.shape ?? "square", 240);
+      const placement = area
+        ? graphicAreaPlacement(area, action.size)
+        : {
+            size: action.size ?? 160,
+            x:
+              action.x !== undefined
+                ? clampX(action.x, action.size ?? 160)
+                : (undefined as number | undefined),
+            y:
+              action.y !== undefined
+                ? clampY(action.y, action.size ?? 160)
+                : (undefined as number | undefined),
+          };
       store.addImage(src, `Placeholder: ${label}`, {
         view,
-        width: size,
-        height: size,
-        ...(action.x !== undefined ? { x: clampX(action.x, size) } : {}),
-        ...(action.y !== undefined ? { y: clampY(action.y, size) } : {}),
+        width: placement.size,
+        height: placement.size,
+        ...(placement.x !== undefined ? { x: placement.x } : {}),
+        ...(placement.y !== undefined ? { y: placement.y } : {}),
       });
-      return `Added placeholder graphic "${label}"`;
+      return `Added placeholder graphic "${label}"${area ? ` in ${area.id}` : ""}`;
     }
 
     case "generateGraphic":
@@ -244,17 +284,30 @@ function applyLayout(layout: LayoutPreset): string {
 export function placeGeneratedImage(
   src: string,
   label: string,
-  opts: { view?: import("@/lib/types").GarmentView; x?: number; y?: number; size?: number } = {},
+  opts: {
+    view?: import("@/lib/types").GarmentView;
+    x?: number;
+    y?: number;
+    size?: number;
+    area?: import("./printAreas").PrintAreaId;
+  } = {},
 ): string {
   const store = useDesignStore.getState();
   const design = store.design;
-  const view = opts.view ?? design.view;
+  const area = opts.area ? findArea(opts.area, design.garment) : null;
+  const view = area ? area.view : (opts.view ?? design.view);
   if (view !== design.view) store.setView(view);
 
-  const size = opts.size ?? 240;
+  let size = opts.size ?? 240;
   // Default placement: centered horizontally, in the upper-mid "print area".
-  const x = opts.x ?? Math.round(CANVAS_WIDTH / 2 - size / 2);
-  const y = opts.y ?? Math.round(CANVAS_HEIGHT / 2 - size / 2 - 30);
+  let x = opts.x ?? Math.round(CANVAS_WIDTH / 2 - size / 2);
+  let y = opts.y ?? Math.round(CANVAS_HEIGHT / 2 - size / 2 - 30);
+  if (area) {
+    const p = graphicAreaPlacement(area, opts.size);
+    size = p.size;
+    x = p.x;
+    y = p.y;
+  }
 
   return store.addImage(src, label, {
     view,

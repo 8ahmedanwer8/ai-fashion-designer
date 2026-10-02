@@ -1,15 +1,18 @@
 "use client";
 
 import { useDesignStore } from "@/lib/store/designStore";
+import { intersectsAnyPrintArea } from "@/lib/agent/printAreas";
 import { cn } from "@/lib/utils";
 
 /**
  * Lists the elements on the *current view*, mirroring the canvas. Selecting a
  * row selects it on the canvas (and vice-versa). Provides quick delete.
+ * Elements outside every print area get a soft warning badge.
  */
 export function LayersPanel() {
   const elements = useDesignStore((s) => s.design.elements);
   const view = useDesignStore((s) => s.design.view);
+  const garment = useDesignStore((s) => s.design.garment);
   const selectedElementId = useDesignStore((s) => s.selectedElementId);
   const selectElement = useDesignStore((s) => s.selectElement);
   const deleteElement = useDesignStore((s) => s.deleteElement);
@@ -42,6 +45,7 @@ export function LayersPanel() {
               el.type === "text"
                 ? el.text || "Text"
                 : el.name || "Image";
+            const offPrint = !intersectsAnyPrintArea(el, garment, el.view);
             return (
               <li key={el.id}>
                 <div
@@ -64,6 +68,13 @@ export function LayersPanel() {
                   <span className="flex-1 truncate text-foreground">
                     {label}
                   </span>
+                  {offPrint && (
+                    <span
+                      title="Outside all print areas"
+                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"
+                      aria-label="Outside all print areas"
+                    />
+                  )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

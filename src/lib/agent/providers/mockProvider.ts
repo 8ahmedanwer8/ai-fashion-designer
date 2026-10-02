@@ -43,8 +43,7 @@ export class MockProvider implements AgentProvider {
       actions.push({
         type: "generateGraphic",
         prompt: userMessage,
-        ...(genView ? { view: genView } : {}),
-        size: genView === "back" ? 300 : 240,
+        area: genView === "back" ? "back-center" : "front-center",
       });
       return {
         reply: `Generating artwork for the ${genView ?? design.view}…`,
@@ -83,15 +82,14 @@ export class MockProvider implements AgentProvider {
       actions.push({
         type: "addPlaceholderGraphic",
         label: "LOGO",
-        view: "front",
-        x: 150,
-        y: 250,
+        area: "left-chest",
         size: 70,
       });
     } else if (/\blogo\b/.test(msg) && /\badd\b/.test(msg)) {
       actions.push({
         type: "addPlaceholderGraphic",
         label: "LOGO",
+        area: /\bback\b/.test(msg) ? "back-center" : "front-center",
         size: 120,
       });
     }
@@ -238,13 +236,21 @@ function detectAddText(msg: string, original: string): DesignAction | null {
     .replace(/[.!?,;:]+$/, "") // strip trailing punctuation
     .trim();
 
-  const view: "front" | "back" = /\bback\b/.test(msg) ? "back" : "front";
+  // Named placement: neck/collar text, else view-based center areas.
+  const onBack = /\bback\b/.test(msg);
+  const area = /\b(neck|collar)\b/.test(msg)
+    ? onBack
+      ? ("back-neck" as const)
+      : ("front-neck" as const)
+    : onBack
+      ? ("back-center" as const)
+      : ("front-center" as const);
   const bold = /\bbold\b/.test(msg);
 
   return {
     type: "addText",
     text,
-    view,
+    area,
     fontWeight: bold ? 800 : 600,
     fontSize: bold ? 48 : 32,
     textAlign: "center",

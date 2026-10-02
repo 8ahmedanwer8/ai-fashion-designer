@@ -28,6 +28,7 @@ The LLM never touches app state directly. It responds with a **structured action
 
 - **11 tool calls** the model can choose from: `addText`, `moveElement`, `recolorElement`, `resizeElement`, `deleteElement`, `setGarmentColor`, `applyLayout`, `generateGraphic`, …
 - **Semantic selectors** — the model can say `target: "logo"` or `"lastText"` instead of knowing internal ids
+- **Named print areas** — the garment is a real data model (`left-chest`, `front-center`, `back-neck`, …); actions place by `area` instead of guessing pixels, with a toggleable canvas overlay and off-print warnings
 - **Validation gate** — invalid actions are dropped and surfaced in chat before anything mutates
 - **One mutation path** — AI edits and manual edits call the same store methods, so they can never drift apart
 - **Split pipelines** — cheap canvas edits apply instantly; image generation runs async so chat never blocks
@@ -76,6 +77,7 @@ Restart the dev server after changing `NEXT_PUBLIC_*` vars.
 | `src/lib/types.ts` | `DesignState` — the design document schema, single source of truth |
 | `src/lib/store/` | Zustand stores: `designStore` (the document), `agentStore` (chat pipeline) |
 | `src/lib/agent/actions.ts` | The tool-call contract (what the LLM may emit) |
+| `src/lib/agent/printAreas.ts` | Named print areas — garment placement data model |
 | `src/lib/agent/prompt.ts` | System prompt describing tools + canvas to the model |
 | `src/lib/agent/validateActions.ts` | Validation gate before any mutation |
 | `src/lib/agent/applyActions.ts` | The single mutation handler for AI edits |
@@ -96,6 +98,6 @@ Next.js 14 (App Router) · React 18 · TypeScript · Zustand · Tailwind CSS · 
 - [x] Export / import
 - [x] Agent transparency: show raw tool calls in chat
 - [x] Multi-turn context for follow-up requests
-- [ ] Named print areas (left-chest, back-full, …) as first-class placement targets
+- [x] Named print areas (left-chest, back-full, …) as first-class placement targets
 - [ ] Undo/redo across manual + AI edits
 - [ ] Unit tests for the agent pipeline

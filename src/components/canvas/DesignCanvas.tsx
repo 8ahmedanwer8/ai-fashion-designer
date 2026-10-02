@@ -9,6 +9,8 @@ import {
 } from "@/lib/store/designStore";
 import { GarmentMockup } from "./GarmentMockup";
 import { CanvasElement } from "./CanvasElement";
+import { PrintAreaOverlay } from "./PrintAreaOverlay";
+import { cn } from "@/lib/utils";
 
 /**
  * The center stage. Renders the garment for the active view plus every element
@@ -16,12 +18,14 @@ import { CanvasElement } from "./CanvasElement";
  *   - responsive scaling (logical 600x700 space -> available screen space)
  *   - click-empty-space to deselect
  *   - Delete/Backspace to remove the selected element
+ *   - toggleable print-area overlay (named placement regions)
  */
 export function DesignCanvas() {
   const design = useDesignStore((s) => s.design);
   const selectedElementId = useDesignStore((s) => s.selectedElementId);
   const selectElement = useDesignStore((s) => s.selectElement);
   const deleteElement = useDesignStore((s) => s.deleteElement);
+  const [showPrintAreas, setShowPrintAreas] = useState(false);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -82,6 +86,20 @@ export function DesignCanvas() {
         <span>Elements: {visibleElements.length}</span>
       </div>
 
+      {/* Print-area overlay toggle */}
+      <button
+        onClick={() => setShowPrintAreas((v) => !v)}
+        className={cn(
+          "absolute right-6 top-6 rounded-md border px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest transition-colors",
+          showPrintAreas
+            ? "border-amber-400/50 bg-amber-400/10 text-amber-300"
+            : "border-border text-muted-foreground hover:text-foreground",
+        )}
+        aria-pressed={showPrintAreas}
+      >
+        Print Areas
+      </button>
+
       {/* The scaled canvas */}
       <div
         className="relative shrink-0"
@@ -100,6 +118,10 @@ export function DesignCanvas() {
           view={design.view}
           color={design.garmentColor}
         />
+
+        {showPrintAreas && (
+          <PrintAreaOverlay garment={design.garment} view={design.view} />
+        )}
 
         {visibleElements.map((el) => (
           <CanvasElement key={el.id} element={el} scale={scale} />

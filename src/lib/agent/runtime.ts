@@ -139,6 +139,7 @@ export async function runGeneration(
       x: action.x,
       y: action.y,
       size: action.size ?? 240,
+      ...(action.area ? { area: action.area } : {}),
     });
 
     return {

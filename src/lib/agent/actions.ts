@@ -1,4 +1,5 @@
 import type { GarmentType, GarmentView } from "@/lib/types";
+import type { PrintAreaId } from "./printAreas";
 
 /**
  * The structured "tool calls" the AI assistant emits. The AI never mutates the
@@ -57,6 +58,8 @@ export interface SwitchViewAction {
 export interface AddTextAction {
   type: "addText";
   text: string;
+  /** Named placement target — preferred over raw x/y. Implies the view. */
+  area?: PrintAreaId;
   view?: GarmentView;
   x?: number;
   y?: number;
@@ -108,6 +111,8 @@ export interface AddPlaceholderGraphicAction {
   type: "addPlaceholderGraphic";
   /** Label drawn inside the placeholder (e.g. "LOGO", "GRAPHIC"). */
   label?: string;
+  /** Named placement target — preferred over raw x/y. Implies the view. */
+  area?: PrintAreaId;
   view?: GarmentView;
   x?: number;
   y?: number;
@@ -126,6 +131,8 @@ export interface GenerateGraphicAction {
   type: "generateGraphic";
   /** The user's description of the artwork to generate. */
   prompt: string;
+  /** Named placement target — preferred over raw x/y. Implies the view. */
+  area?: PrintAreaId;
   view?: GarmentView;
   x?: number;
   y?: number;
