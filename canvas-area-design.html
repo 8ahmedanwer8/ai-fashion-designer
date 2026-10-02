@@ -1,0 +1,541 @@
+<!doctype html>
+<html class="light" lang="en" style="">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f9f9f9;
+        overflow: hidden;
+      }
+      .mono-label {
+        font-family: "JetBrains Mono", monospace;
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 300,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .active-icon {
+        font-variation-settings: "FILL" 1;
+      }
+      /* Custom scrollbar for agentic sidebar */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e2e2e2;
+        border-radius: 10px;
+      }
+    </style>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed": "#1b1b1b",
+              "on-primary": "#ffffff",
+              "surface-container-low": "#f3f3f3",
+              "on-error-container": "#93000a",
+              "on-primary-container": "#848484",
+              "error-container": "#ffdad6",
+              "surface-bright": "#f9f9f9",
+              "on-secondary": "#ffffff",
+              "inverse-primary": "#c6c6c6",
+              "on-primary-fixed": "#1b1b1b",
+              "secondary-fixed-dim": "#c6c5cf",
+              "primary-container": "#1b1b1b",
+              "primary-fixed-dim": "#c6c6c6",
+              "surface-container": "#eeeeee",
+              "secondary-container": "#e3e1ec",
+              tertiary: "#000000",
+              "on-primary-fixed-variant": "#474747",
+              outline: "#7e7576",
+              background: "#f9f9f9",
+              "on-surface-variant": "#4c4546",
+              "surface-container-high": "#e8e8e8",
+              "on-tertiary": "#ffffff",
+              "surface-tint": "#5e5e5e",
+              "surface-variant": "#e2e2e2",
+              "on-background": "#1b1b1b",
+              "on-secondary-fixed": "#1a1b22",
+              "surface-container-lowest": "#ffffff",
+              "surface-dim": "#dadada",
+              "on-tertiary-container": "#848484",
+              surface: "#f9f9f9",
+              "inverse-surface": "#303030",
+              "tertiary-fixed": "#e2e2e2",
+              "on-error": "#ffffff",
+              "primary-fixed": "#e2e2e2",
+              "on-tertiary-fixed-variant": "#474747",
+              secondary: "#5d5e66",
+              "tertiary-fixed-dim": "#c6c6c6",
+              "surface-container-highest": "#e2e2e2",
+              "inverse-on-surface": "#f1f1f1",
+              "secondary-fixed": "#e3e1ec",
+              "on-surface": "#1b1b1b",
+              error: "#ba1a1a",
+              "on-secondary-fixed-variant": "#46464e",
+              primary: "#000000",
+              "outline-variant": "#cfc4c5",
+              "tertiary-container": "#1b1b1b",
+              "on-secondary-container": "#63646c",
+            },
+            borderRadius: {
+              DEFAULT: "0.125rem",
+              lg: "0.25rem",
+              xl: "0.5rem",
+              full: "0.75rem",
+            },
+            spacing: {
+              "margin-desktop": "40px",
+              "container-max": "1280px",
+              "margin-mobile": "16px",
+              base: "8px",
+              gutter: "24px",
+            },
+            fontFamily: {
+              "body-lg": ["Inter"],
+              "headline-xl": ["Inter"],
+              "headline-md": ["Inter"],
+              "headline-lg": ["Inter"],
+              "label-sm": ["Inter"],
+              "body-md": ["Inter"],
+            },
+            fontSize: {
+              "body-lg": [
+                "18px",
+                { lineHeight: "1.6", letterSpacing: "0", fontWeight: "400" },
+              ],
+              "headline-xl": [
+                "48px",
+                {
+                  lineHeight: "1.1",
+                  letterSpacing: "-0.04em",
+                  fontWeight: "600",
+                },
+              ],
+              "headline-md": [
+                "20px",
+                {
+                  lineHeight: "1.4",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "500",
+                },
+              ],
+              "headline-lg": [
+                "32px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.03em",
+                  fontWeight: "600",
+                },
+              ],
+              "label-sm": [
+                "12px",
+                { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600" },
+              ],
+              "body-md": [
+                "16px",
+                { lineHeight: "1.6", letterSpacing: "0", fontWeight: "400" },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-surface select-none">
+    <!-- TopAppBar -->
+    <header
+      class="fixed top-0 w-full h-16 bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-margin-desktop z-50"
+    >
+      <div class="flex items-center gap-gutter">
+        <span
+          class="font-headline-md text-headline-md font-bold tracking-tighter text-primary"
+          >ThreadCraft AI</span
+        >
+        <nav class="hidden md:flex gap-gutter items-center">
+          <button
+            class="text-primary font-bold font-body-md text-body-md hover:opacity-80 transition-opacity active:scale-95 duration-100"
+          >
+            Editor
+          </button>
+          <button
+            class="text-on-surface-variant font-body-md text-body-md hover:opacity-80 transition-opacity active:scale-95 duration-100"
+          >
+            Library
+          </button>
+        </nav>
+      </div>
+      <div class="flex items-center gap-base">
+        <div
+          class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full mr-4"
+        >
+          <span
+            class="material-symbols-outlined text-[18px] text-on-surface-variant"
+            >account_balance_wallet</span
+          >
+          <span class="mono-label text-[11px] font-bold text-on-surface-variant"
+            >2,450 CREDITS</span
+          >
+        </div>
+        <button
+          class="px-6 py-2 border border-outline-variant text-primary font-body-md text-body-md hover:opacity-80 transition-opacity active:scale-95 duration-100"
+        >
+          Save
+        </button>
+        <button
+          class="px-6 py-2 bg-primary text-on-primary font-body-md text-body-md hover:opacity-80 transition-opacity active:scale-95 duration-100"
+        >
+          Export
+        </button>
+        <button
+          class="ml-2 w-8 h-8 rounded-full overflow-hidden border border-outline-variant hover:opacity-80 transition-opacity"
+        >
+          <img
+            alt="User Profile"
+            class="w-full h-full object-cover"
+            src="https://lh3.googleusercontent.com/aida/AP1WRLtKht0U3R5inofMoiKVXkLpc5c4ikYk7B7znOTwM2DTFcYtTFyMAchiilOfn5sSh0hIOkEkMlioeJOniC5pfoCICA3CTlcehbeW5KeE9lOGDa1qqXdqYSGKNWkXFxQJmLJFfrpCrrJC6ARB3nKua0vxebk9UHqcLGZVtT15VmncH-Sb2kV9Jv1NqDXxZc92iJLyAVXg-Uel3t80onskSOhKHAMkGy5Eh5Gc6qtdhpiqmJG30v2QVswksg"
+          />
+        </button>
+        <button
+          class="material-symbols-outlined text-on-surface-variant hover:opacity-80 transition-opacity"
+        >
+          settings
+        </button>
+      </div>
+    </header>
+    <!-- SideNavBar (Left - Garments) -->
+
+    <!-- Center Canvas -->
+    <main
+      class="ml-20 mr-80 pt-16 h-screen relative flex items-center justify-center overflow-hidden"
+    >
+      <!-- Studio Environment Background -->
+      <div class="absolute inset-0 z-0">
+        <div
+          class="absolute inset-0 bg-gradient-to-b from-white via-surface-bright to-surface-container-low"
+        ></div>
+      </div>
+      <!-- Pedestal & Content -->
+      <div class="relative z-10 w-full max-w-4xl flex flex-col items-center">
+        <!-- Technical Overlay Labels -->
+        <div
+          class="absolute -top-12 left-0 mono-label text-[10px] text-on-surface-variant uppercase tracking-widest flex flex-col gap-1"
+        >
+          <span class="opacity-50">System // Studio_Render_Engine</span>
+          <span class="">Active_Model: Garment_Hoodie_Oversized_01</span>
+          <span class="">Lighting: 5500K_Studio_Softbox</span>
+        </div>
+        <!-- Main Render Image -->
+        <div class="w-[600px] h-[700px] relative group">
+          <div
+            class="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white border border-outline-variant px-3 py-1.5 rounded-full shadow-sm z-30"
+          >
+            <button
+              class="p-1 hover:bg-surface-container rounded transition-colors text-on-surface-variant hover:text-primary"
+            >
+              <span class="material-symbols-outlined text-[20px]">near_me</span>
+            </button>
+            <div class="w-px h-4 bg-outline-variant mx-1"></div>
+            <button
+              class="p-1 hover:bg-surface-container rounded transition-colors text-on-surface-variant hover:text-primary"
+            >
+              <span class="material-symbols-outlined text-[20px]"
+                >open_with</span
+              >
+            </button>
+            <button
+              class="p-1 hover:bg-surface-container rounded transition-colors text-on-surface-variant hover:text-primary"
+            >
+              <span class="material-symbols-outlined text-[20px]"
+                >front_hand</span
+              >
+            </button>
+            <button
+              class="p-1 hover:bg-surface-container rounded transition-colors text-on-surface-variant hover:text-primary"
+            >
+              <span class="material-symbols-outlined text-[20px]">zoom_in</span>
+            </button>
+          </div>
+          <div
+            class="absolute inset-0 bg-surface-container-low rounded-full blur-[120px] opacity-40 scale-110 -z-10"
+          ></div>
+          <img
+            class="w-full h-full object-contain mix-blend-multiply drop-shadow-2xl transform transition-transform duration-700 hover:scale-105"
+            data-alt="A high-fidelity minimalist studio render of a premium heavy-weight white oversized hoodie. The hoodie is presented on a clean, light-grey architectural pedestal within a vast, bright white studio space. Soft, diffused professional lighting accentuates the thick cotton texture and meticulous stitching details. The overall aesthetic is monochromatic, clinical, and high-fashion, reflecting a premium streetwear lookbook style with deep shadows and brilliant highlights."
+            src="https://lh3.googleusercontent.com/aida/AP1WRLsl42Zp2EISPT-ZrNEhyx6-E1XTUNMJHf66MIGCXsSe11e2xtJjgvj9F-EKk6hGpA9p4wx-YZFs8syevoXeEppBinVNPHDF40BYOmNR_CI15H4CjAhuXgvETcFXq4ImTlVeyrHlr5zztFAw8aRAthBrzo-sr2MJygO_p2GTvn7kCG1xGPcJU6gjvh2yLU6gfT5LyO2qiIW4TxlMSRgQ7TYraglNC354_R9-IRTAr9dAdO_WyuIZ1DnD1w"
+            style="transform: translate(-7.32422px, 1.97754px)"
+          />
+          <!-- Interactive Markers -->
+          <div
+            class="absolute top-1/3 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full border-2 border-primary bg-white cursor-pointer group-hover:scale-125 transition-transform animate-pulse shadow-lg"
+          ></div>
+        </div>
+        <!-- Pedestal Base -->
+        <div
+          class="w-64 h-4 bg-surface-container-highest rounded-full blur-xl opacity-30 -mt-8"
+        ></div>
+      </div>
+      <!-- Floating Toolbars -->
+      <div
+        class="absolute top-4 left-1/2 -translate-x-1/2 flex gap-6 bg-surface-container-lowest border border-outline-variant px-6 py-2 rounded-full shadow-sm z-30 items-center"
+      >
+        <button
+          class="flex items-center gap-2 group hover:text-primary transition-colors"
+        >
+          <span class="material-symbols-outlined text-[18px]"
+            >branding_watermark</span
+          >
+          <span class="font-label-sm text-[10px] uppercase tracking-tighter"
+            >Logo</span
+          >
+        </button>
+        <div class="w-px h-4 bg-outline-variant"></div>
+        <button
+          class="flex items-center gap-2 group hover:text-primary transition-colors"
+        >
+          <span class="material-symbols-outlined text-[18px]">texture</span>
+          <span class="font-label-sm text-[10px] uppercase tracking-tighter"
+            >Texture</span
+          >
+        </button>
+        <div class="w-px h-4 bg-outline-variant"></div>
+        <button
+          class="flex items-center gap-2 group hover:text-primary transition-colors"
+        >
+          <span class="material-symbols-outlined text-[18px]">palette</span>
+          <span class="font-label-sm text-[10px] uppercase tracking-tighter"
+            >Color</span
+          >
+        </button>
+      </div>
+      <!-- Coordinates UI -->
+      <div
+        class="absolute bottom-6 right-6 mono-label text-[10px] text-on-surface-variant flex gap-gutter opacity-40"
+      >
+        <span class="">X: 11.72</span>
+        <span class="">Y: 631.84</span>
+        <span class="">Z: 1.00</span>
+      </div>
+    </main>
+    <!-- SideNavBar (Right - Agentic Assistant) -->
+    <aside
+      class="fixed right-0 top-16 h-[calc(100vh-64px)] w-80 bg-surface-container-lowest border-l border-outline-variant flex flex-col z-40"
+    >
+      <!-- Assistant Header -->
+      <div class="px-gutter py-base border-b border-outline-variant">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-label-sm text-label-sm font-bold text-primary"
+            >AGENTIC AI</span
+          >
+          <span
+            class="mono-label text-[9px] px-2 py-0.5 bg-surface-container rounded uppercase"
+            >v2.4-stable</span
+          >
+        </div>
+        <div class="flex items-center gap-2 text-primary">
+          <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
+          <span class="font-body-md text-[13px] font-medium"
+            >Processing current mesh...</span
+          >
+        </div>
+      </div>
+      <!-- Chat History -->
+      <div
+        class="flex-1 overflow-y-auto px-gutter py-6 flex flex-col gap-6 custom-scrollbar"
+      >
+        <!-- AI Message -->
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[14px] text-primary"
+              >smart_toy</span
+            >
+            <span class="mono-label text-[10px] uppercase font-bold"
+              >Assistant</span
+            >
+          </div>
+          <div
+            class="bg-surface-container-low px-4 py-3 border border-outline-variant rounded-xl"
+          >
+            <p class="font-body-md text-[13px] text-on-surface leading-relaxed">
+              I've analyzed the drape of your current silhouette. For a more
+              premium streetwear feel, I recommend increasing to a
+              <span class="font-bold underline">Heavier Cotton weight</span>
+              (approx. 450 GSM).
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <button
+              class="px-3 py-1.5 bg-primary text-on-primary text-[10px] mono-label uppercase rounded hover:opacity-90"
+            >
+              Apply Physics
+            </button>
+            <button
+              class="px-3 py-1.5 border border-outline-variant text-on-surface text-[10px] mono-label uppercase rounded hover:bg-surface-container-high"
+            >
+              Ignore
+            </button>
+          </div>
+        </div>
+        <!-- User Message (Implicit from selection) -->
+        <div class="flex flex-col gap-2 items-end">
+          <div class="flex items-center gap-2">
+            <span class="mono-label text-[10px] uppercase font-bold"
+              >Designer</span
+            >
+            <span
+              class="material-symbols-outlined text-[14px] text-on-surface-variant"
+              >person</span
+            >
+          </div>
+          <div
+            class="bg-primary text-on-primary px-4 py-3 rounded-xl max-w-[90%]"
+          >
+            <p class="font-body-md text-[13px] leading-relaxed">
+              Generate high-res preview with the 450 GSM cotton and soft side
+              lighting.
+            </p>
+          </div>
+        </div>
+        <!-- AI Status Bar -->
+        <div class="flex flex-col gap-3 mt-4">
+          <div
+            class="flex items-center justify-between mono-label text-[10px] uppercase"
+          >
+            <span class="">Rendering...</span>
+            <span class="">78%</span>
+          </div>
+          <div
+            class="w-full h-1 bg-surface-container rounded-full overflow-hidden"
+          >
+            <div
+              class="h-full bg-primary w-[78%] transition-all duration-500"
+            ></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="border border-outline-variant p-2 rounded">
+              <span class="block mono-label text-[9px] opacity-50 uppercase"
+                >Samples</span
+              >
+              <span class="block mono-label text-[11px] font-bold"
+                >1024 / 2048</span
+              >
+            </div>
+            <div class="border border-outline-variant p-2 rounded">
+              <span class="block mono-label text-[9px] opacity-50 uppercase"
+                >Time Rem.</span
+              >
+              <span class="block mono-label text-[11px] font-bold">14.2s</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Input Area -->
+      <div class="p-gutter border-t border-outline-variant">
+        <div class="relative">
+          <textarea
+            class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 pr-10 text-[13px] font-body-md focus:ring-0 focus:border-primary resize-none h-20"
+            placeholder="Ask Agentic Studio..."
+          ></textarea>
+          <button
+            class="absolute bottom-3 right-3 text-primary hover:scale-110 transition-transform"
+          >
+            <span class="material-symbols-outlined">bolt</span>
+          </button>
+        </div>
+        <div class="flex justify-between items-center mt-3 opacity-50">
+          <div class="flex gap-2">
+            <span class="material-symbols-outlined text-[16px]">mic</span>
+            <span class="material-symbols-outlined text-[16px]"
+              >attach_file</span
+            >
+          </div>
+          <span class="mono-label text-[9px] uppercase"
+            >GPT-4-Vision // Active</span
+          >
+        </div>
+      </div>
+    </aside>
+    <!-- Global Interactions Script -->
+    <script>
+      document.addEventListener("mousemove", (e) => {
+        const x = e.clientX / window.innerWidth;
+        const y = e.clientY / window.innerHeight;
+
+        // Subtle parallax for the main render
+        const hoodie = document.querySelector("img[data-alt]");
+        if (hoodie) {
+          const moveX = (x - 0.5) * 15;
+          const moveY = (y - 0.5) * 15;
+          hoodie.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        }
+
+        // Update technical coordinate display
+        const coords = document.querySelectorAll(
+          ".absolute.bottom-6.right-6 span",
+        );
+        if (coords.length >= 3) {
+          coords[0].innerText = `X: ${(x * 1000).toFixed(2)}`;
+          coords[1].innerText = `Y: ${(y * 1000).toFixed(2)}`;
+        }
+      });
+
+      // Toggle active garment states
+      const garmentBtns = document.querySelectorAll(
+        "aside:first-of-type .group",
+      );
+      garmentBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          garmentBtns.forEach((b) => {
+            const iconWrap = b.querySelector("div");
+            iconWrap.className =
+              "text-on-surface-variant flex items-center justify-center w-12 h-12 hover:bg-surface-container-high transition-all duration-300 rounded-full";
+            const icon = b.querySelector(".material-symbols-outlined");
+            icon.style.fontVariationSettings = "'FILL' 0";
+            const label = b.querySelector("span:last-child");
+            label.classList.remove("text-primary");
+            label.classList.add("text-on-surface-variant");
+            label.classList.add("opacity-0");
+          });
+
+          const activeWrap = btn.querySelector("div");
+          activeWrap.className =
+            "bg-primary text-on-primary rounded-full w-12 h-12 flex items-center justify-center shadow-md";
+          const activeIcon = btn.querySelector(".material-symbols-outlined");
+          activeIcon.style.fontVariationSettings = "'FILL' 1";
+          const activeLabel = btn.querySelector("span:last-child");
+          activeLabel.classList.add("text-primary");
+          activeLabel.classList.remove("text-on-surface-variant");
+          activeLabel.classList.remove("opacity-0");
+        });
+      });
+    </script>
+  </body>
+</html>
